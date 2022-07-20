@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Page</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <nav></nav>
+    <main>
+        <div>
+            <h5>View Product</h5>
+            <br>
+            <button id="product-access-btn" onclick="fetchProduct()">Check Access</button>
+            <div id="product"></div>
+        </div>
+    </main>
+</body>
+<script>
+    function fetchProduct() {
+    axios.post('http://127.0.0.1:8000/api/get-product/', data={
+        "Reg-token": localStorage.getItem("product-token-register"), 
+        "user": "{{request.user.id}}"
+    },
+            {
+                headers: {
+                    'REGISTERY-TOKEN': `${localStorage.getItem("product-token-register")}`,
+                },
+            }
+    )
+        .then(response => {
+            console.log(response.data)
+            const result = response.data;
+            document.getElementById("product").innerHTML = `<p>${result.message}</p>`;         
+        })
+        .catch(
+            error => {
+                console.error(error)
+            document.getElementById("product").innerHTML = `<p>${error.response.data.message}</p>`;         
+            }
+        );
+    };
+</script>
+</html>

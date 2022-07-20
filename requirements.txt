@@ -1,0 +1,5 @@
+django
+djangorestframework
+mollie-api-python
+django-cors-headers
+gunicorn
