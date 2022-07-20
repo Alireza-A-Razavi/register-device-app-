@@ -37,7 +37,7 @@
     user = {{request.user.id}};
     const csrf = document.getElementsByName("csrfmiddlewaretoken"); 
     const fetchUsers = () => {
-    axios.post('http://127.0.0.1:8000/api/order-create/', data={"user": user},
+    axios.post('http://142.132.174.17:8003/api/order-create/', data={"user": user},
             {
                 headers: {
                     'CSRF_COOKIE': `${csrf}`,

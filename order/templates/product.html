@@ -34,7 +34,7 @@
 </body>
 <script>
     function fetchProduct() {
-    axios.post('http://127.0.0.1:8000/api/get-product/', data={
+    axios.post('http://142.132.174.17:8003/api/get-product/', data={
         "Reg-token": localStorage.getItem("product-token-register"), 
         "user": "{{request.user.id}}"
     },
