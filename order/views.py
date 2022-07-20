@@ -12,6 +12,11 @@ User = get_user_model()
 
 from .models import Order, DeviceToken
 
+class IndexView(View):
+
+    def get(self, request):
+        return render(request, "index.html", {})
+
 class CreateOrderView(View):
     
     def get(self, request):

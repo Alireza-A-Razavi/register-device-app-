@@ -9,7 +9,19 @@
 </head>
 <body>
     <nav>
-        This is the navbar
+        <a href="/">home</a>
+        <!-- <br> -->
+        {% if request.user.is_authenticated %}
+            <a href="/account/logout/">logout</a>
+            <!-- <br> -->
+            <a href="/order/">Order</a>
+            <!-- <br> -->
+            <a href="/product/">Product</a>
+            <!-- <br> -->
+        {% else %}
+            <a href="/account/login/">login</a>
+            <!-- <br> -->
+        {% endif %}
     </nav>
     <main>
         <h1>Create an order</h1>
