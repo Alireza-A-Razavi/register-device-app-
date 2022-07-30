@@ -16,7 +16,6 @@ class DeviceTokenModelSerializer(serializers.ModelSerializer):
         model = DeviceToken
         fields = (
             "order_id",
-            "user",
             "token",
             "created_at", 
             "refresh_time",
@@ -24,10 +23,9 @@ class DeviceTokenModelSerializer(serializers.ModelSerializer):
         read_only_fields = ("created_at", "refresh_time",)
     
     def create(self, validated_data):
-        order = PaidOrder.objects.get(pk=validated_data["order_id"])
-        order.create_device
-        validated_data["user"] = self.context["request"].user
-        return super().create(validated_data)
+        order = PaidOrder.objects.get(wp_order_id=validated_data["order_id"])
+        device = order.create_device()
+        return device
 
 
 class VerifyDeviceTokenSerializer(serializers.Serializer):
@@ -49,8 +47,6 @@ class VerifyDeviceTokenSerializer(serializers.Serializer):
 
 class OrderModelSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(required=False, queryset=User.objects.all())
-    username = serializers.CharField(read_only=True, source="user.username")
-    user_password = serializers.CharField(read_only=True, source="user.temp_password")
 
     class Meta:
         model = PaidOrder
@@ -59,10 +55,8 @@ class OrderModelSerializer(serializers.ModelSerializer):
             "wp_order_id",
             "created_at",
             "user",
-            "username",
-            "user_password",
         )
-        read_only_fields = ("username", "user_passowrd", "user", "created_at")
+        read_only_fields = ("user", "created_at")
 
     # take the user as there is no auth
     def create(self, validated_data):
@@ -70,10 +64,5 @@ class OrderModelSerializer(serializers.ModelSerializer):
         user = User.objects.get(
             wp_user_id=validated_data["wp_user_id"]
         )
-        password = generate_random_password()
-        user.temp_password = password
-        user.set_password(password)
-        user.save()
-        print(validated_data)
         _temp["user"] = user
         return super().create(_temp)

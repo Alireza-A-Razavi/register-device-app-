@@ -16,14 +16,14 @@ class ReplicaOrderCreateAPIView(generics.CreateAPIView):
 
 class DeviceTokenCreateAPIView(generics.CreateAPIView):
     serializer_class = DeviceTokenModelSerializer
-    authentication_classes = [authentication.SessionAuthentication,]
+    authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated,]
     queryset = DeviceToken.objects.all()
 
 
 class DeviceTokenVerifyAPIView(generics.GenericAPIView):
     serializer_class = VerifyDeviceTokenSerializer
-    authentication_classes = [authentication.SessionAuthentication,]
+    authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated,]
     queryset = DeviceToken.objects.all()
 
