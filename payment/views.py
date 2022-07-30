@@ -1,10 +1,5 @@
-from msilib.schema import Patch
 from rest_framework import (
-    views, 
     generics, 
-    response, 
-    status,
-    authentication,
     permissions,
 )
 

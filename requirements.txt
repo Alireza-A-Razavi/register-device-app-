@@ -1,5 +1,5 @@
-django
+django==3.2
 djangorestframework
-mollie-api-python
+# mollie-api-python # for dummpy payment
 django-cors-headers
 gunicorn

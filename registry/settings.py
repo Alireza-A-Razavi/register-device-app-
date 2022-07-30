@@ -133,3 +133,11 @@ AUTH_USER_MODEL = "account.User"
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = True
+
+# REST Framwork
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ]
+}

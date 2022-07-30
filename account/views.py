@@ -1,40 +1,57 @@
-from django.shortcuts import render, redirect
-from django.views import View
-from django.http import HttpResponseBadRequest, JsonResponse
-from django.contrib.auth import authenticate, login, logout
+from django.http import JsonResponse
 from django.middleware.csrf import get_token
+from django.contrib.auth import authenticate, login, get_user_model
 
-class LogoutView(View):
+from rest_framework import (
+    permissions, 
+    authentication, 
+    views, 
+    generics, 
+    response, 
+    status,
+)
 
-    def get(self, request):
-        if not request.user.is_authenticated:
-            return HttpResponseBadRequest
-        else:
-            logout(request)
-            return redirect("/") 
-            
-class SignUpTempView(View):
+from .serializers import UserReplicaSerializer, UserSerializer
 
-    def post(self, request):
-        if request.POST.get("username") and request.POST.get("password"):
-            print(request.POST.get("username"))
-            user = authenticate(
-                username=request.POST.get("username"), 
-                password=request.POST.get("password"),
-            )
-            if user:
-                login(request, user)
-                return redirect("/order/")
-            else:
-                return HttpResponseBadRequest("wrong passowrd or username, GO BACK")
-
-        else:
-            return HttpResponseBadRequest("Provide a username and password, GO BACK")
-
-    def get(self, request):
-        return render(request, "login.html", context={})
-    
+User = get_user_model()
 
 def get_async_csrf_token(request):
     csrftoken = get_token(request)
     return JsonResponse({'csrftoken':csrftoken})
+
+class ReplicaUserCreateAPIView(generics.CreateAPIView):
+    permission_classes = [permissions.AllowAny,]
+    authentication_classes = []
+    serializer_class = UserReplicaSerializer
+    queryset = User.objects.all()
+
+class LoginView(generics.GenericAPIView):
+    serializer_class = UserSerializer
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny,]
+
+    def post(self, request):
+        try:
+            password = request.data.get("password")
+            username = request.data.get("username")
+            if password and username:
+                user = authenticate(username=username, password=password)
+                if user:
+                    login(request, user)
+                    message = "Successfully logined"
+                    status_code = status.HTTP_200_OK
+
+                else:
+                    message = "Wrong password or username"
+                    status_code = status.HTTP_200_OK
+            else:
+                message =  "Provide username and password!"
+                status_code = status.HTTP_400_BAD_REQUEST
+        except KeyError:
+            message =  "Provide username and password!"
+            status_code = status.HTTP_400_BAD_REQUEST
+        
+        return response.Response(
+            {"message": message},
+            status=status_code
+        )
