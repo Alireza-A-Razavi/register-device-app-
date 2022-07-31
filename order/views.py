@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import generics, permissions, response, authentication
+from rest_framework import generics, permissions, response, authentication, status
 
 User = get_user_model()
 
@@ -37,3 +37,22 @@ class DeviceTokenVerifyAPIView(generics.GenericAPIView):
             return response.Response(
                 {"token": sered.token, "success": False}
             )
+
+
+
+class TestOptionsAPIView(generics.GenericAPIView):
+    serializer_class = OrderModelSerializer
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny,]
+
+    def post(self, request):
+        print(request.data)
+        try:
+            print(request.META)
+        except Exception as E:
+            print(E)
+        return response.Response({"status": "OK"}, status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        print(request)
+        return response.Response({"status": "OK"}, status=status.HTTP_200_OK)
