@@ -43,11 +43,7 @@ class User(AbstractUser):
     objects = UserManager()
 
     def __str__(self):
-        if self.wp_user_username:
-            return f"{self.wp_user_id} - {self.wp_user_username}"
-        elif self.phone_number:
-            return f"{self.wp_user_id} - {self.phone_number}"
-        return self.wp_user_id
+        return self.get_full_name()
 
     def set_product_permission(self, permission=None):
         if not permission:

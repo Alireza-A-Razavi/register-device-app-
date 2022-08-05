@@ -4,6 +4,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.utils.timezone import now as timezone_now
+from rest_framework import serializers
 
 from . import ProductType
 
@@ -40,10 +41,10 @@ class PaidOrder(models.Model):
         blank=True,
     )
     wp_user_id = models.PositiveBigIntegerField()
-    wp_order_id = models.PositiveBigIntegerField()
+    wp_order_id = models.PositiveBigIntegerField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     token = models.UUIDField(default=uuid4, editable=False)
-    device_token = models.OneToOneField(DeviceToken, on_delete=models.PROTECT, null=True, blank=True)
+    device_token = models.OneToOneField(DeviceToken, on_delete=models.SET_NULL, null=True, blank=True)
     product_type = models.CharField(max_length=20, choices=ProductType.CHOICES, default=ProductType.NORMAL)
     manual_permission = models.ForeignKey(
         ManualPermission, 
@@ -54,6 +55,12 @@ class PaidOrder(models.Model):
     )
     rose_permission = models.BooleanField(default=False)
     device_limit = models.IntegerField(default=0)
+    product = models.ForeignKey(
+        "Product", 
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return f"{self.user.username} - order"
@@ -71,7 +78,7 @@ class PaidOrder(models.Model):
     
     def create_device(self):
         if self.device_limit <= DeviceToken.objects.filter(user=self.user).count():
-            raise PermissionDenied("you have already registered a device with this order.")
+            raise serializers.ValidationError("You already have a product registered")
         else:
             device = DeviceToken.objects.create(user=self.user)
             self.device_token = device
@@ -80,6 +87,11 @@ class PaidOrder(models.Model):
          
 class Product(models.Model):
     title = models.CharField(max_length=128, verbose_name="نام")
+    product_type = models.CharField(
+        max_length=20, 
+        unique=True, 
+        choices=ProductType.CHOICES,
+    )
     associated_file = models.FileField(
         upload_to="products/",
         null=True, 
