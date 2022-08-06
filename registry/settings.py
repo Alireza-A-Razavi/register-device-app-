@@ -131,7 +131,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = "/home/algotiki/django/static"
-
+STATICFILES_DIRS  = [
+    BASE_DIR / "static_files",
+]
 MEDIA_URL = "media/"
 MEDIA_ROOT = "/home/algotiki/django/media"
 
