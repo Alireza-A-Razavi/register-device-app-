@@ -6,7 +6,7 @@ User = get_user_model()
 from .models import PaidOrder, DeviceToken
 from .serializers import DeviceTokenModelSerializer, OrderModelSerializer, VerifyDeviceTokenSerializer
 from .utils import try_password
-from .permissions import DevicePermission
+# from .permissions import DevicePermission
 
 class ReplicaOrderCreateAPIView(generics.CreateAPIView):
     serializer_class = OrderModelSerializer
@@ -18,7 +18,7 @@ class ReplicaOrderCreateAPIView(generics.CreateAPIView):
 class DeviceTokenCreateAPIView(generics.CreateAPIView):
     serializer_class = DeviceTokenModelSerializer
     authentication_classes = [authentication.TokenAuthentication,]
-    permission_classes = [permissions.IsAuthenticated, DevicePermission]
+    permission_classes = [permissions.IsAuthenticated]
     queryset = DeviceToken.objects.all()
 
 

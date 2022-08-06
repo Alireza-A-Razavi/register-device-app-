@@ -1,3 +1,4 @@
+from pyexpat import model
 from uuid import uuid4
 
 from django.db import models
@@ -92,6 +93,7 @@ class Product(models.Model):
         unique=True, 
         choices=ProductType.CHOICES,
     )
+    wp_product_id = models.PositiveBigIntegerField()
     associated_file = models.FileField(
         upload_to="products/",
         null=True, 

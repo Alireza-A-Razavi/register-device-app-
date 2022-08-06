@@ -3,3 +3,4 @@ djangorestframework
 # mollie-api-python # for dummpy payment
 django-cors-headers
 gunicorn
+python-wordpress-xmlrpc==2.3
