@@ -4,3 +4,4 @@ djangorestframework
 django-cors-headers
 gunicorn
 python-wordpress-xmlrpc==2.3
+psycopg-binary-2
