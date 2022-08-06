@@ -1,6 +1,3 @@
-from tkinter.font import NORMAL
-
-
 class ProductType:
     """Represents the type of a product that the user has bought.
 
