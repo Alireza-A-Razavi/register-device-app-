@@ -11,14 +11,6 @@ from . import ProductType
 
 User = get_user_model()
 
-class ManualPermission(models.Model):
-    title = models.CharField(max_length=64)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.title
-
 class DeviceToken(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     refresh_time = models.DateTimeField(default=timezone_now)
@@ -46,18 +38,9 @@ class PaidOrder(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     token = models.UUIDField(default=uuid4, editable=False)
     device_token = models.OneToOneField(DeviceToken, on_delete=models.SET_NULL, null=True, blank=True)
-    product_type = models.CharField(max_length=20, choices=ProductType.CHOICES, default=ProductType.NORMAL)
-    manual_permission = models.ForeignKey(
-        ManualPermission, 
-        on_delete=models.SET_NULL,
-        null=True, 
-        blank=True,
-        limit_choices_to={"is_active": True}
-    )
-    rose_permission = models.BooleanField(default=False)
     device_limit = models.IntegerField(default=0)
     product = models.ForeignKey(
-        "Product", 
+        "products.Product", 
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -85,26 +68,3 @@ class PaidOrder(models.Model):
             self.device_token = device
             self.save()
             return device
-         
-class Product(models.Model):
-    title = models.CharField(max_length=128, verbose_name="نام")
-    product_type = models.CharField(
-        max_length=20, 
-        unique=True, 
-        choices=ProductType.CHOICES,
-    )
-    wp_product_id = models.PositiveBigIntegerField()
-    associated_file = models.FileField(
-        upload_to="products/",
-        null=True, 
-        blank=True,
-        verbose_name="فایل مربوطه",
-    )
-    piece_of_code = models.TextField(null=True, blank=True, verbose_name="کد")
-
-    class Meta:
-        verbose_name = "محصول"
-        verbose_name_plural = "محصولات"
-
-    def __str__(self):
-        return self.title
