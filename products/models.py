@@ -64,7 +64,8 @@ class Product(models.Model):
     name = models.CharField(max_length=256, verbose_name="نام محصول")
     slug = models.SlugField(
         allow_unicode=True, verbose_name="نامک",
-        null=True, blank=True,
+        null=True, 
+        blank=True,
     )
     permalink = models.URLField(null=True, blank=True)
     wp_product_id = models.PositiveIntegerField(unique=True, verbose_name="آی دی محصول در وردپرس")
