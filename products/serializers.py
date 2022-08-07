@@ -36,7 +36,6 @@ class ProductSerializer(serializers.ModelSerializer):
     permissions = ProductPermissionSerializer(many=True, read_only=True)
     files = ProductFileSerializer(many=True, read_only=True)
     codes = PieceOfCodeSerializer(many=True, read_only=True)
-    slug = serializers.CharField(required=False)
 
     class Meta:
         model = Product
