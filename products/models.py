@@ -75,4 +75,4 @@ class Product(models.Model):
     codes = models.ManyToManyField(PieceOfCode, verbose_name="کد(ها)")
 
     def __str__(self):
-        return self.title
+        return self.name
