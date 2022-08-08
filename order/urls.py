@@ -7,8 +7,5 @@ urlpatterns = [
     path("api/device/verify/", views.DeviceTokenVerifyAPIView.as_view()),
 
     path("api/test/", views.TestOptionsAPIView.as_view()),
-
-    path("register-product/", views.ValidateAndRegsiterUserView.as_view()),
-    path("register-product/success/", views.SuccessProduct.as_view()),
 ]    
 

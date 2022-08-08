@@ -5,7 +5,6 @@ User = get_user_model()
 
 from .models import PaidOrder, DeviceToken
 from .serializers import DeviceTokenModelSerializer, OrderModelSerializer, VerifyDeviceTokenSerializer
-from .utils import try_password
 # from .permissions import DevicePermission
 
 class ReplicaOrderCreateAPIView(generics.CreateAPIView):
@@ -61,54 +60,54 @@ class TestOptionsAPIView(generics.GenericAPIView):
         return response.Response({"status": "OK"}, status=status.HTTP_200_OK)
 
 
-# ==============================================================
-#
-#                 Dajngo Views
-#
-# ==============================================================
-from django.views import View
-from django.shortcuts import render, redirect
-from django.contrib import messages
+# # ==============================================================
+# #
+# #                 Dajngo Views
+# #
+# # ==============================================================
+# from django.views import View
+# from django.shortcuts import render, redirect
+# from django.contrib import messages
 
-class ValidateAndRegsiterUserView(View):
+# class ValidateAndRegsiterUserView(View):
 
-    def get(self, request):
-        return render(request, "validate-register-user.html", context={})
+#     def get(self, request):
+#         return render(request, "validate-register-user.html", context={})
 
-    def post(self, request):
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        wp_validation_code, _cred_ok = try_password(
-            "https://algotik.ir/xmlrpc.php",
-            username, password
-        )
-        if _cred_ok:
-            if password and username:
-                try:
-                    user = User.objects.get(username=username)
-                    user.set_password(password)
-                    user.save()
-                    messages.success(request, "success")
-                    return redirect("/register-product/success/")
-                except User.DoesNotExist:
-                    try:
-                        user = User.objects.get(phone_number=username)
-                        user.set_password(password)
-                        user.save()
-                        messages.success(request, "success")
-                        return redirect("/register-product/success/")
-                    except User.DoesNotExist:
-                        messages.warning(request, "کاربری با این نام کاربری وجود ندارد")
-                        return redirect('/register-product/')
-            else:
-                messages.warning(request, "شماره تلفن یا گذرواژه شما اشتباه است.")
-                return redirect("/register-product/")
-        else:
-            messages.warning(request, "شماره تلفن یا گذرواژه شما اشتباه است.")
-            return redirect("/register-product/")
+#     def post(self, request):
+#         username = request.POST.get("username")
+#         password = request.POST.get("password")
+#         wp_validation_code, _cred_ok = try_password(
+#             "https://algotik.ir/xmlrpc.php",
+#             username, password
+#         )
+#         if _cred_ok:
+#             if password and username:
+#                 try:
+#                     user = User.objects.get(username=username)
+#                     user.set_password(password)
+#                     user.save()
+#                     messages.success(request, "success")
+#                     return redirect("/register-product/success/")
+#                 except User.DoesNotExist:
+#                     try:
+#                         user = User.objects.get(phone_number=username)
+#                         user.set_password(password)
+#                         user.save()
+#                         messages.success(request, "success")
+#                         return redirect("/register-product/success/")
+#                     except User.DoesNotExist:
+#                         messages.warning(request, "کاربری با این نام کاربری وجود ندارد")
+#                         return redirect('/register-product/')
+#             else:
+#                 messages.warning(request, "شماره تلفن یا گذرواژه شما اشتباه است.")
+#                 return redirect("/register-product/")
+#         else:
+#             messages.warning(request, "شماره تلفن یا گذرواژه شما اشتباه است.")
+#             return redirect("/register-product/")
 
 
-class SuccessProduct(View):
+# class SuccessProduct(View):
     
-    def get(self, request):
-        return render(request, "product-success.html")
+#     def get(self, request):
+#         return render(request, "product-success.html")

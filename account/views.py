@@ -1,6 +1,8 @@
+from wsgiref.util import request_uri
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from django.contrib.auth import authenticate, login, get_user_model
+from pkg_resources import require
 
 from rest_framework import (
     permissions, 
@@ -12,6 +14,7 @@ from rest_framework import (
 )
 
 from .serializers import UserReplicaSerializer, UserSerializer
+from .utils import user_verify_and_creation
 
 User = get_user_model()
 
@@ -58,18 +61,34 @@ class LoginView(generics.GenericAPIView):
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from rest_framework import status
+
 
 class CustomAuthToken(ObtainAuthToken):
     
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data,
-                                           context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return response.Response({
-            # 'device_token': None,
-            'token': token.key,
-            'user_id': user.pk,
-            'wp_user_id': user.wp_user_id,
-        })
+        data = user_verify_and_creation(
+            username=request.data.get("username"),
+            password=request.data.get("password"),
+        )
+        user = data.get("user")
+        status_code = data.get("status_code")
+        if user:
+            serializer = self.serializer_class(data=request.data,
+                                                context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            user = serializer.validated_data['user']
+            token, _ = Token.objects.get_or_create(user=user)
+            return response.Response(data = {
+                'token': token.key,
+                'user_id': user.pk,
+                'wp_user_id': user.wp_user_id,
+                "msg": "You have successfully logged in." 
+            }, status=status_code)
+        else:
+            return response.Response({
+                'token': None,
+                'user_id': None,
+                'wp_user_id': None,
+                "msg": "Wrong credentials.",
+            }, status=status_code)
