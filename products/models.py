@@ -1,5 +1,6 @@
 from django.db import models
 
+from . import ProductType
 
 class ProductPermission(models.Model):
     title = models.CharField(
@@ -12,7 +13,7 @@ class ProductPermission(models.Model):
         max_length=512, 
         null=True,
         blank=True,
-        verbose_name="توضیحات"
+        verbose_name="توضیحات",
     )
     device_count_permission = models.PositiveIntegerField(
         null=True, 
@@ -20,8 +21,13 @@ class ProductPermission(models.Model):
         verbose_name="دسترسی تعداد دیوایس",
     )
     
+    class Meta:
+        verbose_name = "دسترسی"
+        verbose_name_plural = "دسترسی ها"
+
     def __str__(self):
         return self.title if self.tile else self.id
+
 
 
 
@@ -36,6 +42,10 @@ class ProductFile(models.Model):
         upload_to="products/",
         verbose_name="فایل"
     )
+    
+    class Meta:
+        verbose_name = "فایل محصول"
+        verbose_name_plural = "فایل ها"
 
     def __str__(self):
         return self.name
@@ -54,6 +64,10 @@ class PieceOfCode(models.Model):
     )
     code = models.TextField()
     is_active = models.BooleanField(default=True, verbose_name="فعال")
+    
+    class Meta:
+        verbose_name = "کد"
+        verbose_name_plural = "کد ها"
 
     def __str__(self):
         return self.title if self.title else self.id
@@ -73,6 +87,16 @@ class Product(models.Model):
     permissions = models.ManyToManyField(ProductPermission, verbose_name="دسترسی ها")
     files = models.ManyToManyField(ProductFile, verbose_name="فایل(ها)")
     codes = models.ManyToManyField(PieceOfCode, verbose_name="کد(ها)")
+    product_type = models.CharField(
+        max_length=20, 
+        choices=ProductType.CHOICES,
+        default=ProductType.NORMAL,
+        verbose_name="نوع"
+    )
+
+    class Meta:
+        verbose_name = "محصول"
+        verbose_name_plural = "محصولات"
 
     def __str__(self):
         return self.name

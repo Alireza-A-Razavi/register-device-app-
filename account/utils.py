@@ -1,7 +1,10 @@
 import random
 import string
-from wordpress_xmlrpc import (Client, InvalidCredentialsError,
-                              ServerConnectionError,)
+from wordpress_xmlrpc import (
+    Client,
+    InvalidCredentialsError,                          
+    ServerConnectionError,
+)
 from wordpress_xmlrpc.methods.users import GetUserInfo
 from rest_framework import status
 
@@ -52,7 +55,6 @@ def user_verify_and_creation(username, password):
             username=user_data.username,
             first_name=user_data.first_name,
             last_name=user_data.last_name,
-
         )
         user.set_password(password)
         user.save()
