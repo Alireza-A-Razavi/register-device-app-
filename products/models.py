@@ -75,6 +75,13 @@ class PieceOfCode(models.Model):
 
 # wordpress product replica
 class Product(models.Model):
+    parent = models.ForeignKey(
+        "self", 
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="محصول مربوطه",
+    )
     name = models.CharField(max_length=256, verbose_name="نام محصول")
     slug = models.SlugField(
         allow_unicode=True, verbose_name="نامک",
