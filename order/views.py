@@ -3,10 +3,14 @@ from rest_framework import generics, permissions, response, authentication, stat
 
 User = get_user_model()
 
+from .utils import perform_raise_permission
 from .models import PaidOrder, DeviceToken
-from .serializers import DeviceTokenModelSerializer, OrderModelSerializer, VerifyDeviceTokenSerializer
-# from .permissions import DevicePermission
-
+from .serializers import (
+    DeviceTokenModelSerializer, 
+    OrderModelSerializer, 
+    VerifyDeviceTokenSerializer, 
+    DeviceAddPluginSerialzier,
+)
 class ReplicaOrderCreateAPIView(generics.CreateAPIView):
     serializer_class = OrderModelSerializer
     authentication_classes = []
@@ -19,6 +23,12 @@ class DeviceTokenCreateAPIView(generics.CreateAPIView):
     authentication_classes = [authentication.TokenAuthentication,]
     permission_classes = [permissions.IsAuthenticated]
     queryset = DeviceToken.objects.all()
+
+
+class DeviceTokenAddPlugin(generics.CreateAPIView):
+    serializer_class = DeviceAddPluginSerialzier
+    authentication_classes = [authentication.TokenAuthentication,]
+    permission_classes = [permissions.IsAuthenticated,]
 
 
 class DeviceTokenVerifyAPIView(generics.GenericAPIView):
@@ -60,54 +70,23 @@ class TestOptionsAPIView(generics.GenericAPIView):
         return response.Response({"status": "OK"}, status=status.HTTP_200_OK)
 
 
-# # ==============================================================
-# #
-# #                 Dajngo Views
-# #
-# # ==============================================================
-# from django.views import View
-# from django.shortcuts import render, redirect
-# from django.contrib import messages
+class OrderUpdatePaymentStatusView(generics.GenericAPIView):
+    serializer_class = OrderModelSerializer
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
 
-# class ValidateAndRegsiterUserView(View):
-
-#     def get(self, request):
-#         return render(request, "validate-register-user.html", context={})
-
-#     def post(self, request):
-#         username = request.POST.get("username")
-#         password = request.POST.get("password")
-#         wp_validation_code, _cred_ok = try_password(
-#             "https://algotik.ir/xmlrpc.php",
-#             username, password
-#         )
-#         if _cred_ok:
-#             if password and username:
-#                 try:
-#                     user = User.objects.get(username=username)
-#                     user.set_password(password)
-#                     user.save()
-#                     messages.success(request, "success")
-#                     return redirect("/register-product/success/")
-#                 except User.DoesNotExist:
-#                     try:
-#                         user = User.objects.get(phone_number=username)
-#                         user.set_password(password)
-#                         user.save()
-#                         messages.success(request, "success")
-#                         return redirect("/register-product/success/")
-#                     except User.DoesNotExist:
-#                         messages.warning(request, "کاربری با این نام کاربری وجود ندارد")
-#                         return redirect('/register-product/')
-#             else:
-#                 messages.warning(request, "شماره تلفن یا گذرواژه شما اشتباه است.")
-#                 return redirect("/register-product/")
-#         else:
-#             messages.warning(request, "شماره تلفن یا گذرواژه شما اشتباه است.")
-#             return redirect("/register-product/")
-
-
-# class SuccessProduct(View):
-    
-#     def get(self, request):
-#         return render(request, "product-success.html")
+    def post(self, request):
+        if request.data.get("status") == "paid":
+            try:
+                target_order = PaidOrder.objects.get(wp_order_id=request.data.get("id"))
+                perform_raise_permission(target_order, customer_id=request.data.get("customer_id"))
+                return response.Response(
+                    data={"msg": "OK"},
+                    status=status.HTTP_200_OK
+                )
+            except PaidOrder.DoesNotExist:
+                print("The order has not been submitted")
+                return response.Response(
+                    data={"msg": "The order has not been added to the api"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )

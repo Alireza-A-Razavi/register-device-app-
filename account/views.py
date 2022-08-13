@@ -92,3 +92,17 @@ class CustomAuthToken(ObtainAuthToken):
                 'wp_user_id': None,
                 "msg": "Wrong credentials.",
             }, status=status_code)
+
+class SimpleLoginAPIView(ObtainAuthToken):
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data,
+                                                context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, _ = Token.objects.get_or_create(user=user)
+        return response.Response(data = {
+                'token': token.key,
+                'user_id': user.pk,
+                "msg": "You have successfully logged in." 
+            }, status=status.HTTP_200_OK)

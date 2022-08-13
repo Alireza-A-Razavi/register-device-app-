@@ -26,7 +26,7 @@ class ProductPermission(models.Model):
         verbose_name_plural = "دسترسی ها"
 
     def __str__(self):
-        return self.title if self.tile else self.id
+        return self.title if self.title else self.id
 
 
 
@@ -91,9 +91,9 @@ class Product(models.Model):
     permalink = models.URLField(null=True, blank=True)
     wp_product_id = models.PositiveIntegerField(unique=True, verbose_name="آی دی محصول در وردپرس")
     status = models.CharField(max_length=32, verbose_name="وضعیت")
-    permissions = models.ManyToManyField(ProductPermission, verbose_name="دسترسی ها")
-    files = models.ManyToManyField(ProductFile, verbose_name="فایل(ها)")
-    codes = models.ManyToManyField(PieceOfCode, verbose_name="کد(ها)")
+    permissions = models.ManyToManyField(ProductPermission, verbose_name="دسترسی ها", blank=True)
+    files = models.ManyToManyField(ProductFile, verbose_name="فایل(ها)", blank=True)
+    codes = models.ManyToManyField(PieceOfCode, verbose_name="کد(ها)", blank=True)
     product_type = models.CharField(
         max_length=20, 
         choices=ProductType.CHOICES,
@@ -107,3 +107,10 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def device_count_limit(self):
+        count = 0
+        for perm in self.permissions.all():
+            count += perm.device_count_permission
+        return count

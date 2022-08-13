@@ -1,7 +1,10 @@
+from uuid import uuid4
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.exceptions import PermissionDenied
 
 from . import ProductPermissionType
+from products import ProductType
 
 class UserManager(BaseUserManager):
     def create_user(
@@ -58,3 +61,71 @@ class User(AbstractUser):
             return self.product_permission
         else:
             return False
+        
+    def create_device(self):
+        perm =  self.userapppermission
+        if perm:
+            if perm.check_device_limit():
+                from order.models import DeviceToken
+                device_token = DeviceToken.objects.create(user=self)
+                perm.device_count += 1
+                perm.save()
+                return device_token
+            else:
+                raise PermissionDenied
+            
+
+class UserAppPermission(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    allowed_device_count = models.PositiveIntegerField(default=0)
+    device_count = models.PositiveBigIntegerField(default=0)
+
+    def check_device_limit(self):
+        if self.device_count != 0 and self.device_count > self.allowed_device_count:
+            return False
+        elif self.device_count == self.allowed_device_count and self.allowed_device_count != 0:
+            return False
+        elif self.device_count < self.allowed_device_count and self.allowed_device_count != 0:
+            return True
+    
+    def save(self, *args, **kwargs):
+        if self.device_count > self.allowed_device_count:
+            raise PermissionDenied
+        super(UserAppPermission, self).save(*args, **kwargs)
+    
+
+class UserProductPermission(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="product_permissions")
+    product = models.ForeignKey(
+        "products.Product", 
+        on_delete=models.CASCADE, 
+        limit_choices_to={"product_type": ProductType.PLUGIN},
+    )
+    allowed_device_count = models.PositiveIntegerField(default=0)
+    device_count = models.PositiveBigIntegerField(default=0)
+
+    class Meta:
+        unique_together = ["product", "user"]
+
+    def check_device_limit(self):
+        if self.device_count != 0 and self.device_count > self.allowed_device_count:
+            return False 
+        elif self.device_count < self.allowed_device_count and self.allowed_device_count != 0:
+            return True
+
+    def up_device_count(self):
+        self.device_count += 1
+        self.save()
+        return True
+
+    def down_device_permission(self):
+        self.device_count -+ 1
+        self.save()
+        return True
+
+    def save(self, *args, **kwargs):
+        if self.device_count != 0 and self.device_count > self.allowed_device_count:
+            raise PermissionDenied
+        else:
+            super(UserProductPermission, self).save(*args, **kwargs)
+

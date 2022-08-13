@@ -1,3 +1,4 @@
+from itertools import product
 from pyexpat import model
 from uuid import uuid4
 
@@ -7,7 +8,8 @@ from django.core.exceptions import PermissionDenied
 from django.utils.timezone import now as timezone_now
 from rest_framework import serializers
 
-from . import ProductType
+from products import ProductType
+
 
 User = get_user_model()
 
@@ -16,16 +18,30 @@ class DeviceToken(models.Model):
     refresh_time = models.DateTimeField(default=timezone_now)
     token = models.UUIDField(default=uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-
+    plugins = models.ManyToManyField(
+        "products.Product", 
+        blank=True,
+        limit_choices_to={"product_type": ProductType.PLUGIN},
+        related_name="linked_plugins",
+    )
+   
     def __str__(self):
         return str(self.token)
-
     
     def refresh_token(self):
         self.refresh_time = timezone_now()
         self.save()
         return True
-    
+
+class ProductLine(models.Model):
+    item = models.ForeignKey("products.Product", on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.item.name} x {self.quantity}"
+
+
 class PaidOrder(models.Model):
     user = models.ForeignKey(
         User,
@@ -37,34 +53,9 @@ class PaidOrder(models.Model):
     wp_order_id = models.PositiveBigIntegerField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     token = models.UUIDField(default=uuid4, editable=False)
-    device_token = models.OneToOneField(DeviceToken, on_delete=models.SET_NULL, null=True, blank=True)
-    device_limit = models.IntegerField(default=0)
-    product = models.ForeignKey(
-        "products.Product", 
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
+    products = models.ManyToManyField("products.Product")
+    rose_permission = models.BooleanField(default=False)
+    line_items = models.ManyToManyField(ProductLine)
 
     def __str__(self):
         return f"{self.user.username} - order"
-    
-    def save(self, *args, **kwargs):
-        if self.device_limit != 0:
-            pass 
-        elif self.product_type == ProductType.ALL_IN_ONE:
-            self.device_limit = 10
-        elif self.product_type == ProductType.PREMIUM:
-            self.device_limit = 1
-        else:
-            pass 
-        super(PaidOrder, self).save(*args, **kwargs)
-    
-    def create_device(self):
-        if self.device_limit <= DeviceToken.objects.filter(user=self.user).count():
-            raise serializers.ValidationError("You already have a product registered")
-        else:
-            device = DeviceToken.objects.create(user=self.user)
-            self.device_token = device
-            self.save()
-            return device

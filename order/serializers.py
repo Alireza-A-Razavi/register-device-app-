@@ -2,9 +2,11 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import IntegrityError
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 
-from .models import DeviceToken, PaidOrder
+from .models import DeviceToken, PaidOrder, ProductLine
 from account.utils import generate_random_password
+from products.models import Product
 
 User = get_user_model()
 
@@ -12,17 +14,13 @@ class InternalServerError(Exception):
     pass
 
 class DeviceTokenModelSerializer(serializers.Serializer):
-    order_id = serializers.IntegerField(write_only=False, source='paidorder.pk')
     token = serializers.UUIDField(required=False)
     created_at = serializers.DateTimeField(required=False)
 
     def create(self, validated_data):
-        try:
-            order = PaidOrder.objects.get(wp_order_id=validated_data["paidorder"]["pk"])
-        except PaidOrder.DoesNotExist:
-            order = PaidOrder.objects.get(pk=validated_data["paidorder"]["pk"])
-        device = order.create_device()
-        return device
+        user = self.context["request"].user
+        device_token = user.create_device()
+        return device_token
 
 
 class VerifyDeviceTokenSerializer(serializers.Serializer):
@@ -36,11 +34,25 @@ class VerifyDeviceTokenSerializer(serializers.Serializer):
         else:
             return False
 
-class OrderModelSerializer(serializers.ModelSerializer):
+class LineModelSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField(source="item.pk")
+
+    class Meta:
+        model = ProductLine
+        fields = ("product_id", "quantity",)
+
+    def create(self, validated_data):
+        product_wp_id = validated_data.pop("item")
+        validated_data["item"] = Product.objects.get(wp_product_id=product_wp_id["pk"])
+        return super().create(validated_data)
+        
+
+class OrderModelSerializer(WritableNestedModelSerializer):
     user = serializers.PrimaryKeyRelatedField(required=False, queryset=User.objects.all())
     id = serializers.CharField(source="wp_order_id")
     status = serializers.CharField(required=False, write_only=True)
     customer_id = serializers.CharField(source="wp_user_id")
+    line_items = LineModelSerializer(many=True)
 
     class Meta:
         model = PaidOrder
@@ -51,6 +63,7 @@ class OrderModelSerializer(serializers.ModelSerializer):
             "user",
             "status", 
             "customer_id",
+            "line_items",
         )
         read_only_fields = ("user", "created_at")
 
@@ -72,3 +85,22 @@ class OrderModelSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Order already exists")
         else:
             raise PermissionDenied
+
+
+class DeviceAddPluginSerialzier(serializers.Serializer):
+    plugin_id = serializers.IntegerField(write_only=True)
+    token = serializers.UUIDField()
+
+    def create(self, validated_data):
+        user = self.context["request"].user
+        product_perm = user.product_permissions.all().filter(product__wp_product_id=validated_data["plugin_id"]).first()
+        if product_perm.check_device_limit():
+            token = DeviceToken.objects.get(token=validated_data["token"])
+            token.plugins.add(product_perm.product)
+            token.save()
+            product_perm.device_count += 1
+            product_perm.save()
+            return token
+        else:
+            raise serializers.ValidationError("You have reached this plugin device limit")
+            

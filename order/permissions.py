@@ -1,3 +1,4 @@
+from graphviz import view
 from rest_framework.permissions import BasePermission
 
 from .models import PaidOrder
@@ -13,3 +14,5 @@ class DevicePermission(BasePermission):
                 return False
         except KeyError:
             return False
+        
+
