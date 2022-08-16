@@ -35,6 +35,9 @@ class DeviceToken(models.Model):
         self.save()
         return True
 
+    def activate_and_handle_plugins(self):
+        plugin_perm = self.user.productapp
+
 class ProductLine(models.Model):
     item = models.ForeignKey("products.Product", on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
