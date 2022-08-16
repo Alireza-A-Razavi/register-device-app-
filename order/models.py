@@ -36,7 +36,14 @@ class DeviceToken(models.Model):
         return True
 
     def activate_and_handle_plugins(self):
-        plugin_perm = self.user.productapp
+        from account.models import UserProductPermission
+        plugin_perms = UserProductPermission.objects.filter(user=self.user)
+        for plugin_perm in plugin_perms:
+            if not plugin_perm.check_device_limit():
+                pass
+            else:
+                plugin_perm.up_device_count() 
+
 
 class ProductLine(models.Model):
     item = models.ForeignKey("products.Product", on_delete=models.CASCADE)
