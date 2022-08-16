@@ -1,10 +1,11 @@
+from lib2to3.pgen2 import token
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now as timezone_now
 from rest_framework import generics, permissions, response, authentication, status
 
 User = get_user_model()
 
-from ..account.serializers import UserSerializer, UserDetailSerializer
+from account.serializers import UserSerializer, UserDetailSerializer
 
 from .utils import perform_raise_permission
 from .models import PaidOrder, DeviceToken
@@ -106,7 +107,7 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
         # checks if the request has token or empty
         if request.data.get("token") == "" or None:
             # validate user perms and create token
-            device_token = user.create_device()
+            device_token = request.user.create_device()
             plugins = device_token.activate_and_handle_plugins()
             if device_token:
                 data = {
@@ -117,7 +118,7 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                 }
                 message = "Successfully created device token for user."
                 status_code = status.HTTP_201_CREATED
-        elif:
+        else:
             # validate ser perms and verify token
             try:
                 # refresh token by time
@@ -147,3 +148,24 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                 }
         return response.Response(data=data, status=status_code)
             
+class DeviceExpireAPIView(generics.GenericAPIView):
+    serializer_class = DeviceTokenModelSerializer
+    authentication_classes = [authentication.TokenAuthentication,]
+    permission_classes = [permissions.IsAuthenticated,]
+
+    def post(self, request):
+        try:
+            if request.data.get("token"):
+                try:
+                    device_token = DeviceToken.objects.get(token=request.data.get("token"))
+                    device_token.expired = True
+                    device_token.save()
+                    message = "Successfully expired the device token."
+                    status_code = status.HTTP_200_OK
+                except DeviceToken.DoesNotExist:
+                    message = "Wrong token"
+                    status_code = status.HTTP_401_UNAUTHORIZED
+        except KeyError:
+            message = "Provide the necessary data."
+            status_code = status.HTTP_400_BAD_REQUEST
+        return response.Response(data = {"message": message}, status=status_code)
