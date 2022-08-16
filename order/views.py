@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model
+from django.utils.timezone import now as timezone_now
 from rest_framework import generics, permissions, response, authentication, status
 
 User = get_user_model()
+
+from ..account.serializers import UserSerializer, UserDetailSerializer
 
 from .utils import perform_raise_permission
 from .models import PaidOrder, DeviceToken
@@ -10,6 +13,7 @@ from .serializers import (
     OrderModelSerializer, 
     VerifyDeviceTokenSerializer, 
     DeviceAddPluginSerialzier,
+    DeviceInfoSerializer,
 )
 class ReplicaOrderCreateAPIView(generics.CreateAPIView):
     serializer_class = OrderModelSerializer
@@ -90,3 +94,56 @@ class OrderUpdatePaymentStatusView(generics.GenericAPIView):
                     data={"msg": "The order has not been added to the api"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+
+
+class DeviceCreateOrVerify(generics.GenericAPIView):
+    serializer_class = DeviceTokenModelSerializer
+    authentication_classes = [authentication.TokenAuthentication,]
+    permission_classes = [permissions.IsAuthenticated,]
+
+    def post(self, request, *args, **kwargs):
+
+        # checks if the request has token or empty
+        if request.data.get("token") == "" or None:
+            # validate user perms and create token
+            device_token = user.create_device()
+            plugins = device_token.activate_and_handle_plugins()
+            if device_token:
+                data = {
+                    "token": device_token.token,
+                    "created": True,
+                    "device": DeviceInfoSerializer(device_token).data,
+                    "user": UserDetailSerializer(request.user).data,
+                }
+                message = "Successfully created device token for user."
+                status_code = status.HTTP_201_CREATED
+        elif:
+            # validate ser perms and verify token
+            try:
+                # refresh token by time
+                device_token = DeviceToken.objects.get(token=request.data.get("token"))
+                if (timezone_now() - device_token.refresh_time).hours > 6 or device_token.expired:
+                    device_token.refresh_token()
+                    # validate device with unique data
+                    message = "Successfully refreshed device token."
+                    status_code = status.HTTP_200_OK
+                else:
+                    message = "Successfully validated token."
+                    status_code = status_code.HTTP_200_OK
+                data = {
+                    "token": device_token,
+                    "created": False,
+                    "device": DeviceInfoSerializer(device_token).data,
+                    "user": UserDetailSerializer(request.user).data
+                }
+            except DeviceToken.DoesNotExist:
+                message = "Token is wrong, please request with a different token."
+                status_code = status.HTTP_401_UNAUTHORIZED
+                data = {
+                    "token": "",
+                    "created": False,
+                    "device": None,
+                    "user": UserDetailSerializer(request.user).data,
+                }
+        return response.Response(data=data, status=status_code)
+            

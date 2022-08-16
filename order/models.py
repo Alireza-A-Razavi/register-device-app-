@@ -24,12 +24,14 @@ class DeviceToken(models.Model):
         limit_choices_to={"product_type": ProductType.PLUGIN},
         related_name="linked_plugins",
     )
+    expired = models.BooleanField(default=False, null=True, blank=True) # user expires it
    
     def __str__(self):
         return str(self.token)
     
     def refresh_token(self):
         self.refresh_time = timezone_now()
+        self.token = uuid4()
         self.save()
         return True
 

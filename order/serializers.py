@@ -6,7 +6,9 @@ from drf_writable_nested.serializers import WritableNestedModelSerializer
 
 from .models import DeviceToken, PaidOrder, ProductLine
 from account.utils import generate_random_password
+from account.serializers import UserDetailSerializer
 from products.models import Product
+from products.serializers import ProductSerializer
 
 User = get_user_model()
 
@@ -103,4 +105,16 @@ class DeviceAddPluginSerialzier(serializers.Serializer):
             return token
         else:
             raise serializers.ValidationError("You have reached this plugin device limit")
-            
+
+
+class DeviceInfoSerializer(serializers.ModelSerializer):
+    user = UserDetailSerializer()
+    plugins = ProductSerializer(many=True)
+
+    class Meta:
+        model = DeviceToken
+        fields = (
+            "created_at", 
+            "user", 
+            "plugins",
+        )
