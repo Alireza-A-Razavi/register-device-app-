@@ -123,16 +123,19 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
             try:
                 # refresh token by time
                 device_token = DeviceToken.objects.get(token=request.data.get("token"))
-                if (timezone_now() - device_token.refresh_time).hours > 6 or device_token.expired:
-                    device_token.refresh_token()
+                t = (timezone_now() - device_token.refresh_time)
+                if t.seconds > 3600*6 or t.days > 0 or device_token.expired:
+                    d_token = device_token.refresh_token()
+                    print(d_token)
                     # validate device with unique data
                     message = "Successfully refreshed device token."
                     status_code = status.HTTP_200_OK
                 else:
                     message = "Successfully validated token."
-                    status_code = status_code.HTTP_200_OK
+                    status_code = status.HTTP_200_OK
+                    d_token = None
                 data = {
-                    "token": device_token,
+                    "token": d_token or device_token.token,
                     "created": False,
                     "device": DeviceInfoSerializer(device_token).data,
                     "user": UserDetailSerializer(request.user).data

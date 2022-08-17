@@ -32,8 +32,9 @@ class DeviceToken(models.Model):
     def refresh_token(self):
         self.refresh_time = timezone_now()
         self.token = uuid4()
+        self.expired = False
         self.save()
-        return True
+        return self.token
 
     def activate_and_handle_plugins(self):
         from account.models import UserProductPermission

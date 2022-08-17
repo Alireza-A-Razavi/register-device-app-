@@ -12,7 +12,8 @@ urlpatterns = [
     # update: the project owner wants the create and verify process to tak place
     # in one single endpoint
     path("api/device/create-verify/", views.DeviceCreateOrVerify.as_view()),
-    path("api/device/expire/", views.DeviceExpireAPIView.as_view()),    
+    path("api/device/expire/", views.DeviceExpireAPIView.as_view()),
+        
     path("api/test/", views.TestOptionsAPIView.as_view()),
 ]    
 
