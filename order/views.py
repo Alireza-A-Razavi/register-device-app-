@@ -1,6 +1,6 @@
-from lib2to3.pgen2 import token
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now as timezone_now
+from django.core.exception import ValidationError
 from rest_framework import generics, permissions, response, authentication, status
 
 User = get_user_model()
@@ -149,6 +149,15 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                     "device": None,
                     "user": UserDetailSerializer(request.user).data,
                 }
+            except ValidationError:
+                message = "Token is wrong, lpease request with a different token."
+                status_code = status.HTTP_401_UNAUTHORIZED
+                data = {
+                    "token": "",
+                    "created": False,
+                    "device": None,
+                    "user": UserDetailSerializer(request.user).data,
+                }
         return response.Response(data=data, status=status_code)
             
 class DeviceExpireAPIView(generics.GenericAPIView):
@@ -168,6 +177,9 @@ class DeviceExpireAPIView(generics.GenericAPIView):
                 except DeviceToken.DoesNotExist:
                     message = "Wrong token"
                     status_code = status.HTTP_401_UNAUTHORIZED
+            else:
+                message = "Enter the token with your request"
+                status_code = status.HTTP_401_UNAUTHORIZED
         except KeyError:
             message = "Provide the necessary data."
             status_code = status.HTTP_400_BAD_REQUEST
