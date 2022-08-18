@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now as timezone_now
-from django.core.exception import ValidationError
+from django.core.exceptions import ValidationError
 from rest_framework import generics, permissions, response, authentication, status
 
 User = get_user_model()
