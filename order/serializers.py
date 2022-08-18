@@ -73,7 +73,7 @@ class OrderModelSerializer(WritableNestedModelSerializer):
     def create(self, validated_data):
         print(validated_data)
         _temp = validated_data
-        if _temp.pop("status") == "paid":
+        if _temp.pop("status") == "completed":
             try:
                 user = User.objects.get(
                     wp_user_id=_temp["wp_user_id"]
