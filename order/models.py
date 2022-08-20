@@ -72,3 +72,9 @@ class PaidOrder(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - order"
+
+    def save(self, *args, **kwargs):
+        super(PaidOrder, self).save(*args, **kwargs)
+        if self.user and self.products.all().exists():
+            for p in self.products.all():
+                self.user.products.add(p)

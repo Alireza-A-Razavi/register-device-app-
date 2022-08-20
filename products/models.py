@@ -81,6 +81,7 @@ class Product(models.Model):
         null=True,
         blank=True,
         verbose_name="محصول مربوطه",
+        limit_choices_to={"product_type": ProductType.NORMAL},
     )
     name = models.CharField(max_length=256, verbose_name="نام محصول")
     slug = models.SlugField(

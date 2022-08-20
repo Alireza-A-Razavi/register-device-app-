@@ -42,6 +42,7 @@ class User(AbstractUser):
     )
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
+    products = models.ManyToManyField("products.Product", blank=True)
 
     objects = UserManager()
 
