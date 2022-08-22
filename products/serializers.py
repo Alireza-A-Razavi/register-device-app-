@@ -51,7 +51,6 @@ class ProductSerializer(serializers.ModelSerializer):
     permissions = ProductPermissionSerializer(many=True, read_only=True)
     files = ProductFileSerializer(many=True, read_only=True)
     codes = PieceOfCodeSerializer(many=True, read_only=True)
-    plugins = serializers.SerializerMethodField(required=False)
 
     class Meta:
         model = Product
@@ -64,12 +63,4 @@ class ProductSerializer(serializers.ModelSerializer):
             "permissions",
             "files",
             "codes",
-            "plugins",
         )
-
-    def get_plugins(self, obj):
-        if obj.parent:
-            return None
-        else:
-            return PluginSerializer(obj.product_set, many=True).data
-            

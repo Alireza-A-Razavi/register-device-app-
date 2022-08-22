@@ -30,7 +30,12 @@ class ProductRetrieveAPIVIew(generics.GenericAPIView):
             return response.Response(
                 {
                     "proudct": ProductSerializer(product.first()).data,
-                    "plugins": PluginSerializer(product.first().product_set.all(), many=True).data
+                    "plugins": PluginSerializer(
+                            request.user.products.filter(
+                            product_type=ProductType.PLUGIN,
+                            parent__wp_product_id=wp_product_id,
+                        ), many=True
+                    ).data
                 }, status=status.HTTP_200_OK
             )
         else:
