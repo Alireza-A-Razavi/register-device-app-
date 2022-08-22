@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import User, UserAppPermission
+from .models import User, UserAppPermission, UserProductPermission
 from .utils import generate_random_password
 
 class UserReplicaSerializer(serializers.Serializer):
@@ -32,8 +32,19 @@ class UserAppPermissionSerializer(serializers.ModelSerializer):
             "device_count",
         )
 
+class UserProductPermissionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProductPermission
+        fields = (
+            "product",
+            "allowed_device_count",
+            "device_count",
+        )
+
 class UserDetailSerializer(serializers.ModelSerializer):
     userapppermission = UserAppPermissionSerializer()
+    product_permissions = UserProductPermissionSerializer(many=True)
 
     class Meta:
         model = User
@@ -43,5 +54,5 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "last_name",
             "products",
             "userapppermission",
+            "product_permissions",
         )
-        depth = 1
