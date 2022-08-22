@@ -70,7 +70,7 @@ class PieceOfCode(models.Model):
         verbose_name_plural = "کد ها"
 
     def __str__(self):
-        return self.title if self.title else self.id
+        return self.name if self.name else self.id
 
 
 # wordpress product replica
