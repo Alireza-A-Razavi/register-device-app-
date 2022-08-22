@@ -6,6 +6,7 @@ from rest_framework import generics, permissions, response, authentication, stat
 User = get_user_model()
 
 from account.serializers import UserSerializer, UserDetailSerializer
+from account import permissions as custom_permissions
 
 from .utils import perform_raise_permission
 from .models import PaidOrder, DeviceToken
@@ -108,6 +109,9 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
         if request.data.get("token") == "" or None:
             # validate user perms and create token
             device_token = request.user.create_device()
+            if device_token:
+                device_token.device_uuid = request.data.get('uuid')
+                device_token.save()
             plugins = device_token.activate_and_handle_plugins()
             if device_token:
                 data = {
@@ -123,23 +127,33 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
             try:
                 # refresh token by time
                 device_token = DeviceToken.objects.get(token=request.data.get("token"))
-                t = (timezone_now() - device_token.refresh_time)
-                if t.seconds > 3600*6 or t.days > 0 or device_token.expired:
-                    d_token = device_token.refresh_token()
-                    print(d_token)
-                    # validate device with unique data
-                    message = "Successfully refreshed device token."
-                    status_code = status.HTTP_200_OK
+                if request.data.get("uuid") == device_token.device_uuid:
+                    t = (timezone_now() - device_token.refresh_time)
+                    if t.seconds > 3600*6 or t.days > 0 or device_token.expired:
+                        d_token = device_token.refresh_token()
+                        print(d_token)
+                        # validate device with unique data
+                        message = "Successfully refreshed device token."
+                        status_code = status.HTTP_200_OK
+                    else:
+                        message = "Successfully validated token."
+                        status_code = status.HTTP_200_OK
+                        d_token = None
+                    data = {
+                        "token": d_token or device_token.token,
+                        "created": False,
+                        "device": DeviceInfoSerializer(device_token).data,
+                        "user": UserDetailSerializer(request.user).data
+                    }
                 else:
-                    message = "Successfully validated token."
-                    status_code = status.HTTP_200_OK
-                    d_token = None
-                data = {
-                    "token": d_token or device_token.token,
-                    "created": False,
-                    "device": DeviceInfoSerializer(device_token).data,
-                    "user": UserDetailSerializer(request.user).data
-                }
+                    message = "The device is not correct."
+                    status_code = status.HTTP_401_UNAUTHORIZED
+                    data = {
+                        "token": "",
+                        "created": False,
+                        "device": None,
+                        "user": UserDetailSerializer(request.user).data,
+                    }
             except DeviceToken.DoesNotExist:
                 message = "Token is wrong, please request with a different token."
                 status_code = status.HTTP_401_UNAUTHORIZED
@@ -158,12 +172,16 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                     "device": None,
                     "user": UserDetailSerializer(request.user).data,
                 }
+        data["message"] = message
         return response.Response(data=data, status=status_code)
             
 class DeviceExpireAPIView(generics.GenericAPIView):
     serializer_class = DeviceTokenModelSerializer
     authentication_classes = [authentication.TokenAuthentication,]
-    permission_classes = [permissions.IsAuthenticated,]
+    permission_classes = [
+        permissions.IsAuthenticated,
+        custom_permissions.DevicePermission,
+    ]
 
     def post(self, request):
         try:

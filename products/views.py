@@ -2,7 +2,9 @@ from rest_framework import generics, authentication, permissions, response, stat
 
 from . import ProductType
 from .models import Product
-from .serializers import ProductSerializer
+from .serializers import PluginSerializer, ProductSerializer
+
+from account import permissions as custom_permissions
 
 class ProductReplicaCreateAPIView(generics.CreateAPIView):
     authentication_classes = []
@@ -13,7 +15,11 @@ class ProductReplicaCreateAPIView(generics.CreateAPIView):
 class ProductRetrieveAPIVIew(generics.GenericAPIView):
     serializer_class = ProductSerializer
     authentication_classes = [authentication.TokenAuthentication,]
-    permission_classes = [permissions.IsAuthenticated,]
+    permission_classes = [
+        permissions.IsAuthenticated, 
+        custom_permissions.DevicePermission,
+        custom_permissions.UserAgentPermission,
+    ]
 
     def get(self, request, wp_product_id, *args, **kwargs):
         product = request.user.products.all().filter(
@@ -23,7 +29,8 @@ class ProductRetrieveAPIVIew(generics.GenericAPIView):
         if product.exists():
             return response.Response(
                 {
-                    "proudct": ProductSerializer(product.first()).data
+                    "proudct": ProductSerializer(product.first()).data,
+                    "plugins": PluginSerializer(product.first().product_set.all(), many=True).data
                 }, status=status.HTTP_200_OK
             )
         else:

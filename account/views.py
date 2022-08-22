@@ -13,7 +13,7 @@ from rest_framework import (
     status,
 )
 
-from .serializers import UserReplicaSerializer, UserSerializer
+from .serializers import UserReplicaSerializer, UserSerializer, UserDetailSerializer
 from .utils import user_verify_and_creation
 
 User = get_user_model()
@@ -83,6 +83,7 @@ class CustomAuthToken(ObtainAuthToken):
                 'token': token.key,
                 'user_id': user.pk,
                 'wp_user_id': user.wp_user_id,
+                "user": UserDetailSerializer(user).data,
                 "msg": "You have successfully logged in." 
             }, status=status_code)
         else:
