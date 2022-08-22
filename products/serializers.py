@@ -31,9 +31,7 @@ class PieceOfCodeSerializer(serializers.ModelSerializer):
             "is_active",
         )
 
-class ProductSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source="wp_product_id")
-    permissions = ProductPermissionSerializer(many=True, read_only=True)
+class PluginSerializer(serializers.ModelSerializer):
     files = ProductFileSerializer(many=True, read_only=True)
     codes = PieceOfCodeSerializer(many=True, read_only=True)
 
@@ -41,10 +39,37 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             "name",
-            "permalink",
             "id",
-            "status",
+            "wp_product_id",
             "permissions",
             "files",
             "codes",
         )
+
+class ProductSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="wp_product_id")
+    permissions = ProductPermissionSerializer(many=True, read_only=True)
+    files = ProductFileSerializer(many=True, read_only=True)
+    codes = PieceOfCodeSerializer(many=True, read_only=True)
+    plugins = serializers.SerializerMethodField(required=False)
+
+    class Meta:
+        model = Product
+        fields = (
+            "name",
+            "permalink",
+            "id",
+            "pk",
+            "status",
+            "permissions",
+            "files",
+            "codes",
+            "plugins",
+        )
+
+    def get_plugins(self, obj):
+        if obj.parent:
+            return None
+        else:
+            return PluginSerializer(obj.product_set, many=True).data
+            

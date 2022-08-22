@@ -13,6 +13,7 @@ urlpatterns = [
     # in one single endpoint
     path("api/device/create-verify/", views.DeviceCreateOrVerify.as_view()),
     path("api/device/expire/", views.DeviceExpireAPIView.as_view()),
+    # path("api/product/", views.UsersProductList.as_view()),
         
     path("api/test/", views.TestOptionsAPIView.as_view()),
 ]    

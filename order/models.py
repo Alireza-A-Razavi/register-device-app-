@@ -24,6 +24,7 @@ class DeviceToken(models.Model):
         limit_choices_to={"product_type": ProductType.PLUGIN},
         related_name="linked_plugins",
     )
+    device_uuid = models.CharField(max_length=64, null=True, blank=True)
     expired = models.BooleanField(default=False, null=True, blank=True) # user expires it
    
     def __str__(self):
