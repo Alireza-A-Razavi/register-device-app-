@@ -2,9 +2,6 @@ from statistics import mode
 from django.contrib import admin
 from . import models
 
-class UserAppPermissionsTabularInline(admin.TabularInline):
-    model = models.UserAppPermission
-
 class UserProductPermissionsTabularInLine(admin.TabularInline):
     model = models.UserProductPermission
 
@@ -12,7 +9,6 @@ class UserProductPermissionsTabularInLine(admin.TabularInline):
 class UserModelAdmin(admin.ModelAdmin):
     model = models.User
     inlines = [
-        UserAppPermissionsTabularInline,
         UserProductPermissionsTabularInLine,
     ]
 

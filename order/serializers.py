@@ -9,6 +9,7 @@ from account.utils import generate_random_password
 from account.serializers import UserDetailSerializer
 from products.models import Product
 from products.serializers import ProductSerializer
+from .utils import perform_raise_permission
 
 User = get_user_model()
 
@@ -45,9 +46,12 @@ class LineModelSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         product_wp_id = validated_data.pop("item")
-        validated_data["item"] = Product.objects.get(wp_product_id=product_wp_id["pk"])
-        return super().create(validated_data)
-        
+        line, created = ProductLine.objects.get_or_create(
+            item=Product.objects.get(wp_product_id=product_wp_id["pk"]),
+            quantity=validated_data["quantity"],
+        )
+        from .utils import perform_raise_permission
+        return line
 
 class OrderModelSerializer(WritableNestedModelSerializer):
     user = serializers.PrimaryKeyRelatedField(required=False, queryset=User.objects.all())
@@ -82,7 +86,9 @@ class OrderModelSerializer(WritableNestedModelSerializer):
                 raise ObjectDoesNotExist("User with this username doesn't exist")
             _temp["user"] = user
             try:
-                return super().create(_temp)
+                create = super().create(_temp)
+                perform_raise_permission(order=create, user=user)
+                return create
             except IntegrityError:
                 raise serializers.ValidationError("Order already exists")
         else:

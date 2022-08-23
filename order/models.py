@@ -1,5 +1,3 @@
-from itertools import product
-from pyexpat import model
 from uuid import uuid4
 
 from django.db import models
@@ -67,7 +65,6 @@ class PaidOrder(models.Model):
     wp_order_id = models.PositiveBigIntegerField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     token = models.UUIDField(default=uuid4, editable=False)
-    products = models.ManyToManyField("products.Product")
     rose_permission = models.BooleanField(default=False)
     line_items = models.ManyToManyField(ProductLine)
 
@@ -75,7 +72,8 @@ class PaidOrder(models.Model):
         return f"{self.user.username} - order"
 
     def save(self, *args, **kwargs):
+        print("save method is called:  ", self.id)
         super(PaidOrder, self).save(*args, **kwargs)
-        if self.user and self.products.all().exists():
-            for p in self.products.all():
-                self.user.products.add(p)
+        if self.user and self.line_items:
+            for p in self.line_items.all():
+                self.user.products.add(p.item)

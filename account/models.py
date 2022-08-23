@@ -5,6 +5,7 @@ from django.core.exceptions import PermissionDenied
 
 from . import ProductPermissionType
 from products import ProductType
+from products.models import Product
 
 class UserManager(BaseUserManager):
     def create_user(
@@ -48,23 +49,45 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.get_full_name()
+    
 
-    def set_product_permission(self, permission=None):
-        if not permission:
-            return False
-        elif permission == "premium":
-            self.product_permission == ProductPermissionType.PREMIUM
-            self.save()
-            return self.product_permission
-        elif permission == "all-in-one":
-            self.product_permission = ProductPermissionType.ALL_IN_ONE
-            self.save()
-            return self.product_permission
+    def check_permission_satisfied(self):
+        pass
+
+    # this piece of code, create_main_product_permission func, is for high scale
+    # users for now I stick to perform_raise_permission in order/utils.py file to
+    # achevie needs of quick delivery
+    def create_main_product_permission(self, product_ids):
+        if prodcut_ids:
+            # get products with passed list of ids
+            products = Product.objects.filter(wp_product_id__in=prodcut_ids)
+            # fetch products that already have permission associated with 
+            # product ids and current user
+            # -- first fetch perms  
+            perms_already_there = UserProductPermission.objects.filter(
+                product__in=products, user=self
+            ).select_related("product")
+            # then value of the ids of products have perm
+            prods_have_perm = perms_already_there.values_list("product__id")
+            # differetiate products that don't have permission associated
+            target_prods = products.difference(prods_have_perm)
+            # bulk create product permissions for target products
+            users = UserProductPermission.objects.bulk_create(
+                UserProductPermission(product=p, user=self) for p in target_prods
+            )
+            # update perms that are already there with device_count
+            update_objs = []
+            for perm in perms_already_there:
+                perm.allowed_device_count += perm.product.device_count_limit
+                update_objs.append(perm)
+            UserProductPermission.objects.bulk_update(
+                update_objs, ["allowed_device_count"]
+            )
         else:
-            return False
-        
-    def create_device(self):
-        perm =  self.userapppermission
+            return None
+
+    def create_device(self, product_id):
+        perm = self.product_permissions.filter(product__wp_product_id=prodcut_id).first()
         if perm:
             if perm.check_device_limit():
                 from order.models import DeviceToken
@@ -74,33 +97,15 @@ class User(AbstractUser):
                 return device_token
             else:
                 raise PermissionDenied
-            
-
-class UserAppPermission(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    allowed_device_count = models.PositiveIntegerField(default=0)
-    device_count = models.PositiveBigIntegerField(default=0)
-
-    def check_device_limit(self):
-        if self.device_count != 0 and self.device_count > self.allowed_device_count:
-            return False
-        elif self.device_count == self.allowed_device_count and self.allowed_device_count != 0:
-            return False
-        elif self.device_count < self.allowed_device_count and self.allowed_device_count != 0:
-            return True
-    
-    def save(self, *args, **kwargs):
-        if self.device_count > self.allowed_device_count:
+        else:
             raise PermissionDenied
-        super(UserAppPermission, self).save(*args, **kwargs)
-    
+             
 
 class UserProductPermission(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="product_permissions")
     product = models.ForeignKey(
         "products.Product", 
-        on_delete=models.CASCADE, 
-        limit_choices_to={"product_type": ProductType.PLUGIN},
+        on_delete=models.CASCADE,
     )
     allowed_device_count = models.PositiveIntegerField(default=0)
     device_count = models.PositiveBigIntegerField(default=0)
@@ -129,4 +134,3 @@ class UserProductPermission(models.Model):
             raise PermissionDenied
         else:
             super(UserProductPermission, self).save(*args, **kwargs)
-

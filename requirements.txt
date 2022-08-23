@@ -5,4 +5,4 @@ django-cors-headers
 drf-writable-nested
 gunicorn
 python-wordpress-xmlrpc==2.3
-psycopg-binary-2
+psycopg2-binary

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 
 from .models import DeviceToken, PaidOrder
 
-from account.models import UserProductPermission, UserAppPermission
+from account.models import  UserProductPermission
 from products import ProductType
 
 User = get_user_model()
@@ -14,22 +14,18 @@ User = get_user_model()
 #     for plugin in device.linked_plugins.all():
 #         if plugin
 
-def perform_raise_permission(order: PaidOrder, customer_id):
+def perform_raise_permission(order: PaidOrder, user):
     if order.rose_permission:
         return order, False
 
     else:
-        user = User.objects.get(wp_user_id=customer_id)
-        lines = order.line_items
+        lines = order.line_items.all()
         for line in lines:
-            product=line.item
-            if line.item.product_type != ProductType.NORMAL:
-                permission, created = UserProductPermission.objects.get_or_create(
-                    user=user,
-                    product=product,
-                )
-            else:
-                permission, created = UserAppPermission.objects.get_or_create(user=user)
+            product = line.item
+            permission, created = UserProductPermission.objects.get_or_create(
+                user=user,
+                product=product,
+            )
             permission.allowed_device_count += product.device_count_limit
             permission.save()
         order.rose_permission = True
