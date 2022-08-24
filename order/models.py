@@ -43,6 +43,8 @@ class DeviceToken(models.Model):
                 pass
             else:
                 plugin_perm.up_device_count() 
+                self.plugins.add(plugin_perm.product)
+                self.save()
 
 
 class ProductLine(models.Model):

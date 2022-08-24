@@ -108,7 +108,7 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
         # checks if the request has token or empty
         if request.data.get("token") == "" or None:
             # validate user perms and create token
-            device_token = request.user.create_device()
+            device_token = request.user.create_device(product_id=request.data.get("product_id"))
             if device_token:
                 device_token.device_uuid = request.data.get('uuid')
                 device_token.save()

@@ -75,14 +75,6 @@ class PieceOfCode(models.Model):
 
 # wordpress product replica
 class Product(models.Model):
-    parent = models.ForeignKey(
-        "self", 
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name="محصول مربوطه",
-        limit_choices_to={"product_type": ProductType.NORMAL},
-    )
     name = models.CharField(max_length=256, verbose_name="نام محصول")
     slug = models.SlugField(
         allow_unicode=True, verbose_name="نامک",
@@ -100,6 +92,12 @@ class Product(models.Model):
         choices=ProductType.CHOICES,
         default=ProductType.NORMAL,
         verbose_name="نوع"
+    )
+    plugins = models.ManyToManyField(
+        "self", 
+        limit_choices_to={"product_type": ProductType.PLUGIN},
+        blank=True,
+        verbose_name="پلاگین(ها)"
     )
 
     class Meta:

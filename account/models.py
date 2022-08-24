@@ -58,7 +58,7 @@ class User(AbstractUser):
     # users for now I stick to perform_raise_permission in order/utils.py file to
     # achevie needs of quick delivery
     def create_main_product_permission(self, product_ids):
-        if prodcut_ids:
+        if product_ids:
             # get products with passed list of ids
             products = Product.objects.filter(wp_product_id__in=prodcut_ids)
             # fetch products that already have permission associated with 
@@ -87,7 +87,7 @@ class User(AbstractUser):
             return None
 
     def create_device(self, product_id):
-        perm = self.product_permissions.filter(product__wp_product_id=prodcut_id).first()
+        perm = self.product_permissions.filter(product__wp_product_id=product_id).first()
         if perm:
             if perm.check_device_limit():
                 from order.models import DeviceToken

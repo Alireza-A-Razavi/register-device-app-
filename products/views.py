@@ -3,6 +3,7 @@ from rest_framework import generics, authentication, permissions, response, stat
 from . import ProductType
 from .models import Product
 from .serializers import PluginSerializer, ProductSerializer
+from order.models import DeviceToken
 
 from account import permissions as custom_permissions
 
@@ -26,16 +27,15 @@ class ProductRetrieveAPIVIew(generics.GenericAPIView):
             wp_product_id=wp_product_id,
             product_type=ProductType.NORMAL
         )
+        device_token = DeviceToken.objects.get(token=request.data.get("token"), device_uuid=request.data.get("uuid"))
         if product.exists():
             return response.Response(
                 {
                     "proudct": ProductSerializer(product.first()).data,
                     "plugins": PluginSerializer(
-                            request.user.products.filter(
-                            product_type=ProductType.PLUGIN,
-                            parent__wp_product_id=wp_product_id,
-                        ), many=True
-                    ).data
+                                    device_token.plugins.all(), 
+                                    many=True
+                                ).data
                 }, status=status.HTTP_200_OK
             )
         else:

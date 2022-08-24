@@ -51,6 +51,7 @@ class ProductSerializer(serializers.ModelSerializer):
     permissions = ProductPermissionSerializer(many=True, read_only=True)
     files = ProductFileSerializer(many=True, read_only=True)
     codes = PieceOfCodeSerializer(many=True, read_only=True)
+    plugins = PluginSerializer(many=True)
 
     class Meta:
         model = Product
@@ -63,4 +64,5 @@ class ProductSerializer(serializers.ModelSerializer):
             "permissions",
             "files",
             "codes",
+            "plugins",
         )

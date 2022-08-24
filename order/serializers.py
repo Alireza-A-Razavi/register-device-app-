@@ -22,7 +22,7 @@ class DeviceTokenModelSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         user = self.context["request"].user
-        device_token = user.create_device()
+        device_token = user.create_device(product_id=self.context["request"].data.get("product_id"))
         return device_token
 
 
