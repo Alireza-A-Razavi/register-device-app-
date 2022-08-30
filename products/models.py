@@ -50,11 +50,6 @@ class ProductFile(models.Model):
         return self.name
 
 
-    def save(self, *args, **kwargs):
-        if not self.name:
-            self.name = self.associated_file.name
-        super(ProductFile, self).save(*args, **kwargs)
-
 class PieceOfCode(models.Model):
     name = models.CharField(
         max_length=64,

@@ -1,5 +1,6 @@
 django==3.2
 djangorestframework
+django-constance[database]
 # mollie-api-python # for dummpy payment
 django-cors-headers
 django-private-storage
