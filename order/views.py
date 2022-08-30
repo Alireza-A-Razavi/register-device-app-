@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.utils.timezone import now as timezone_now
 from django.core.exceptions import ValidationError
 from rest_framework import generics, permissions, response, authentication, status
+from constance import config
 
 User = get_user_model()
 
@@ -108,17 +109,18 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
         # checks if the request has token or empty
         if request.data.get("token") == "" or None:
             # validate user perms and create token
-            device_token = request.user.create_device(product_id=request.data.get("product_id"))
+            device_token = request.user.create_device(product_id=int(request.data.get("product_id")))
             if device_token:
                 device_token.device_uuid = request.data.get('uuid')
                 device_token.save()
             plugins = device_token.activate_and_handle_plugins()
             if device_token:
                 data = {
-                    "token": device_token.token,
-                    "created": True,
-                    "device": DeviceInfoSerializer(device_token).data,
-                    "user": UserDetailSerializer(request.user).data,
+                    "device-token": device_token.token,
+                    "plugins": [plugin[0] for plugin in device_token.plugins.all().values_list("wp_product_id")],
+                    "product": device_token.product.id,
+                    "userproductspermissions": UserDetailSerializer(request.user).data["product_permissions"],
+                    "first-created": True,
                 }
                 message = "Successfully created device token for user."
                 status_code = status.HTTP_201_CREATED
@@ -129,7 +131,7 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                 device_token = DeviceToken.objects.get(token=request.data.get("token"))
                 if request.data.get("uuid") == device_token.device_uuid:
                     t = (timezone_now() - device_token.refresh_time)
-                    if t.seconds > 3600*6 or t.days > 0 or device_token.expired:
+                    if t.seconds > 3600*config.TOKEN_EXPIRATION_HOURS or t.days > 0 or device_token.expired:
                         d_token = device_token.refresh_token()
                         print(d_token)
                         # validate device with unique data
@@ -140,26 +142,30 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                         status_code = status.HTTP_200_OK
                         d_token = None
                     data = {
-                        "token": d_token or device_token.token,
-                        "created": False,
-                        "device": DeviceInfoSerializer(device_token).data,
-                        "user": UserDetailSerializer(request.user).data
+                        "device-token": device_token.token,
+                        "plugins": [plugin[0] for plugin in device_token.plugins.all().values_list("wp_product_id")],
+                        "product": device_token.product.id,
+                        "userproductspermissions": UserDetailSerializer(request.user).data["product_permissions"],
+                        "first-created": False,
+                        "user": UserDetailSerializer(request.user).data,
                     }
                 else:
                     message = "The device is not correct."
                     status_code = status.HTTP_401_UNAUTHORIZED
                     data = {
-                        "token": "",
-                        "created": False,
-                        "device": None,
+                        "device-token": "",
+                        "plugins": None,
+                        "product": None,
+                        "userproductspermissions": None, 
+                        "first-created": False,
                         "user": UserDetailSerializer(request.user).data,
                     }
             except DeviceToken.DoesNotExist:
                 message = "Token is wrong, please request with a different token."
                 status_code = status.HTTP_401_UNAUTHORIZED
                 data = {
-                    "token": "",
-                    "created": False,
+                    "device-token": "",
+                    "first-created": False,
                     "device": None,
                     "user": UserDetailSerializer(request.user).data,
                 }

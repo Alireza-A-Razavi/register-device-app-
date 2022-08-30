@@ -1,3 +1,4 @@
+from itertools import product
 from rest_framework import serializers
 
 from .models import User, UserProductPermission
@@ -24,14 +25,18 @@ class UserSerializer(serializers.ModelSerializer):
         depth = 1
 
 class UserProductPermissionSerializer(serializers.ModelSerializer):
+    product_type = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProductPermission
         fields = (
-            "product",
+            "product_type",
             "allowed_device_count",
             "device_count",
         )
+    
+    def get_product_type(self, obj):
+        return obj.product.product_type
 
 class UserDetailSerializer(serializers.ModelSerializer):
     product_permissions = UserProductPermissionSerializer(many=True)

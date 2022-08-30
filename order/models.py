@@ -22,6 +22,7 @@ class DeviceToken(models.Model):
         limit_choices_to={"product_type": ProductType.PLUGIN},
         related_name="linked_plugins",
     )
+    product = models.ForeignKey("products.Product", blank=True, null=True, on_delete=models.SET_NULL)
     device_uuid = models.CharField(max_length=64, null=True, blank=True)
     expired = models.BooleanField(default=False, null=True, blank=True) # user expires it
    
@@ -36,8 +37,9 @@ class DeviceToken(models.Model):
         return self.token
 
     def activate_and_handle_plugins(self):
+        # for sake of race condition and faster queies use bulk_update
         from account.models import UserProductPermission
-        plugin_perms = UserProductPermission.objects.filter(user=self.user)
+        plugin_perms = UserProductPermission.objects.filter(user=self.user).select_related("product")
         for plugin_perm in plugin_perms:
             if not plugin_perm.check_device_limit():
                 pass

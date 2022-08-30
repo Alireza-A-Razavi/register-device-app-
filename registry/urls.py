@@ -9,6 +9,7 @@ urlpatterns = [
     path("", include("order.urls")),
     path("", include("account.urls")),
     path("", include("products.urls")),
+    path('private-media/', include("private_storage.urls")),
 ] 
 
 urlpatterns += static(settings.STATIC_URL,

@@ -2,6 +2,7 @@ django==3.2
 djangorestframework
 # mollie-api-python # for dummpy payment
 django-cors-headers
+django-private-storage
 drf-writable-nested
 gunicorn
 python-wordpress-xmlrpc==2.3

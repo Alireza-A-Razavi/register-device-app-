@@ -1,4 +1,5 @@
 from django.db import models
+from private_storage.fields import PrivateFileField
 
 from . import ProductType
 
@@ -29,8 +30,6 @@ class ProductPermission(models.Model):
         return self.title if self.title else self.id
 
 
-
-
 class ProductFile(models.Model):
     name = models.CharField(
         max_length=64,
@@ -38,8 +37,8 @@ class ProductFile(models.Model):
         null=True,
         blank=True,
     )
-    associated_file = models.FileField(
-        upload_to="products/",
+    associated_file = PrivateFileField(
+        upload_to='products/', 
         verbose_name="فایل"
     )
     
@@ -49,6 +48,7 @@ class ProductFile(models.Model):
 
     def __str__(self):
         return self.name
+
 
     def save(self, *args, **kwargs):
         if not self.name:

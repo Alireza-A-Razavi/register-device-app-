@@ -1,8 +1,6 @@
-from wsgiref.util import request_uri
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from django.contrib.auth import authenticate, login, get_user_model
-from pkg_resources import require
 
 from rest_framework import (
     permissions, 
@@ -13,6 +11,7 @@ from rest_framework import (
     status,
 )
 
+from products import ProductType
 from .serializers import UserReplicaSerializer, UserSerializer, UserDetailSerializer
 from .utils import user_verify_and_creation
 
@@ -81,16 +80,13 @@ class CustomAuthToken(ObtainAuthToken):
             token, _ = Token.objects.get_or_create(user=user)
             return response.Response(data = {
                 'token': token.key,
-                'user_id': user.pk,
-                'wp_user_id': user.wp_user_id,
-                "user": UserDetailSerializer(user).data,
+                "products": [product[0] for product in user.products.filter(product_type=ProductType.NORMAL).values_list("wp_product_id")],
                 "msg": "You have successfully logged in." 
             }, status=status_code)
         else:
             return response.Response({
                 'token': None,
-                'user_id': None,
-                'wp_user_id': None,
+                "products": None,
                 "msg": "Wrong credentials.",
             }, status=status_code)
 
@@ -104,6 +100,6 @@ class SimpleLoginAPIView(ObtainAuthToken):
         token, _ = Token.objects.get_or_create(user=user)
         return response.Response(data = {
                 'token': token.key,
-                'user_id': user.pk,
-                "msg": "You have successfully logged in." 
+                "products": [product[0] for product in user.products.filter(product_type=ProductType.NORMAL).values_list("wp_product_id")],
+                "msg": "You have successfully logged in.",
             }, status=status.HTTP_200_OK)
