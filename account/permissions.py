@@ -34,3 +34,12 @@ class DevicePermission(BasePermission):
                     return False
         except KeyError:
             return False
+
+
+def allow_authenticated_device(private_file):
+    token = private_file.request.META.get("HTTP_X_DEVICE_TOKEN")
+    try:
+        device_token = DeviceToken.objects.get(token=token)
+        return device_token.device_uuid == private_file.request.META.get("HTTP_X_DEVICE_UUID")
+    except DeviceToken.DoesNotExist:
+        pass
