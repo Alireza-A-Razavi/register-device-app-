@@ -156,7 +156,7 @@ REST_FRAMEWORK = {
 }
 
 
-PRIVATE_STORAGE_ROOT = '/path/to/private-media/'
+PRIVATE_STORAGE_ROOT = '/home/algotiki/django/media'
 PRIVATE_STORAGE_AUTH_FUNCTION = 'private_storage.permissions.allow_staff'
 
 # django constance settigns
