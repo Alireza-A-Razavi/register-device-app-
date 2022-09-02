@@ -120,7 +120,7 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                     "plugins": [plugin[0] for plugin in device_token.plugins.all().values_list("wp_product_id")],
                     "product": device_token.product.id,
                     "userproductspermissions": UserDetailSerializer(request.user).data["product_permissions"],
-                    "first-created": True,
+                    "first-create": True,
                 }
                 message = "Successfully created device token for user."
                 status_code = status.HTTP_201_CREATED
@@ -146,7 +146,7 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                         "plugins": [plugin[0] for plugin in device_token.plugins.all().values_list("wp_product_id")],
                         "product": device_token.product.id,
                         "userproductspermissions": UserDetailSerializer(request.user).data["product_permissions"],
-                        "first-created": False,
+                        "first-create": False,
                         "user": UserDetailSerializer(request.user).data,
                     }
                 else:
@@ -157,7 +157,7 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                         "plugins": None,
                         "product": None,
                         "userproductspermissions": None, 
-                        "first-created": False,
+                        "first-create": False,
                         "user": UserDetailSerializer(request.user).data,
                     }
             except DeviceToken.DoesNotExist:
@@ -165,7 +165,7 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                 status_code = status.HTTP_401_UNAUTHORIZED
                 data = {
                     "device-token": "",
-                    "first-created": False,
+                    "first-create": False,
                     "device": None,
                     "user": UserDetailSerializer(request.user).data,
                 }

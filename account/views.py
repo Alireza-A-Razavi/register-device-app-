@@ -81,6 +81,7 @@ class CustomAuthToken(ObtainAuthToken):
             return response.Response(data = {
                 'token': token.key,
                 "products": [product[0] for product in user.products.filter(product_type=ProductType.NORMAL).values_list("wp_product_id")],
+                "plugins": [product[0] for product in user.products.filter(product_type=ProductType.PLUGIN).values_list("wp_product_id")],
                 "msg": "You have successfully logged in." 
             }, status=status_code)
         else:
