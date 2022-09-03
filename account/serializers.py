@@ -34,6 +34,7 @@ class UserProductPermissionSerializer(serializers.ModelSerializer):
             "product_type",
             "allowed_device_count",
             "device_count",
+            "product_id",
         )
     
     def get_product_type(self, obj):
