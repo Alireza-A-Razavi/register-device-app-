@@ -4,7 +4,6 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.utils.timezone import now as timezone_now
-from rest_framework import serializers
 
 from products import ProductType
 
@@ -39,7 +38,7 @@ class DeviceToken(models.Model):
     def activate_and_handle_plugins(self):
         # for sake of race condition and faster queies use bulk_update
         from account.models import UserProductPermission
-        plugin_perms = UserProductPermission.objects.filter(user=self.user).select_related("product")
+        plugin_perms = UserProductPermission.objects.filter(user=self.user, product_type=ProductType.PLUGIN).select_related("product")
         for plugin_perm in plugin_perms:
             if not plugin_perm.check_device_limit():
                 pass
