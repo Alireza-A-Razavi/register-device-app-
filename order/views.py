@@ -118,7 +118,6 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                 data = {
                     "device-token": device_token.token,
                     "plugins": [plugin[0] for plugin in device_token.plugins.all().values_list("wp_product_id")],
-                    "product": device_token.product.id,
                     "userproductspermissions": UserDetailSerializer(request.user).data["product_permissions"],
                     "first-create": True,
                 }
@@ -144,21 +143,17 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                     data = {
                         "device-token": device_token.token,
                         "plugins": [plugin[0] for plugin in device_token.plugins.all().values_list("wp_product_id")],
-                        "product": device_token.product.id,
                         "userproductspermissions": UserDetailSerializer(request.user).data["product_permissions"],
                         "first-create": False,
-                        "user": UserDetailSerializer(request.user).data,
                     }
                 else:
                     message = "The device is not correct."
                     status_code = status.HTTP_401_UNAUTHORIZED
                     data = {
                         "device-token": "",
-                        "plugins": None,
-                        "product": None,
-                        "userproductspermissions": None, 
                         "first-create": False,
-                        "user": UserDetailSerializer(request.user).data,
+                        "plugins": None,
+                        "userproductspermissions": None, 
                     }
             except DeviceToken.DoesNotExist:
                 message = "Token is wrong, please request with a different token."
@@ -166,17 +161,17 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                 data = {
                     "device-token": "",
                     "first-create": False,
-                    "device": None,
-                    "user": UserDetailSerializer(request.user).data,
+                    "plugins": [],
+                    "userproductspermissions": [],
                 }
             except ValidationError:
                 message = "Token is wrong, lpease request with a different token."
                 status_code = status.HTTP_401_UNAUTHORIZED
                 data = {
-                    "token": "",
-                    "created": False,
-                    "device": None,
-                    "user": UserDetailSerializer(request.user).data,
+                    "device-token": "",
+                    "first-create": False,
+                    "plugins": None,
+                    "userproductspermissions": None, 
                 }
         data["message"] = message
         return response.Response(data=data, status=status_code)
