@@ -92,7 +92,7 @@ class User(AbstractUser):
             if perm.check_device_limit():
                 from order.models import DeviceToken
                 device_token = DeviceToken.objects.create(
-                    user=self, product_id=product_id,
+                    user=self, product=Product.objects.get(wp_product_id=product_id),
                 )
                 perm.device_count += 1
                 perm.save()
