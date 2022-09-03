@@ -38,19 +38,26 @@ class VerifyDeviceTokenSerializer(serializers.Serializer):
             return False
 
 class LineModelSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField(source="item.pk")
+    product_id = serializers.IntegerField()
 
     class Meta:
         model = ProductLine
         fields = ("product_id", "quantity",)
 
     def create(self, validated_data):
-        product_wp_id = validated_data.pop("item")
+        product_wp_id = validated_data.pop("product_id")
         line, created = ProductLine.objects.get_or_create(
-            item=Product.objects.get(wp_product_id=product_wp_id["pk"]),
+            item=Product.objects.get(wp_product_id=product_wp_id),
             quantity=validated_data["quantity"],
         )
-        from .utils import perform_raise_permission
+        return line
+
+    def update(self, validated_data):
+        product_wp_id = validated_data.pop("item")
+        line, created = ProductLine.objects.get_or_create(
+            item=Product.objects.get(wp_product_id=product_wp_id),
+            quantity=validated_data["quantity"],
+        )
         return line
 
 class OrderModelSerializer(WritableNestedModelSerializer):
@@ -83,7 +90,7 @@ class OrderModelSerializer(WritableNestedModelSerializer):
                     wp_user_id=_temp["wp_user_id"]
                 )
             except User.DoesNotExist:
-                raise ObjectDoesNotExist("User with this username doesn't exist")
+                raise ObjectDoesNotExist(f"User with this {_temp['wp_user_id']} wordpress user id doesn't exist")
             _temp["user"] = user
             try:
                 create = super().create(_temp)
