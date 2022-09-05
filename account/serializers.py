@@ -26,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserProductPermissionSerializer(serializers.ModelSerializer):
     product_type = serializers.SerializerMethodField()
-    product_id = serializers.IntegerField(source="product.id")
+    product_id = serializers.IntegerField(source="product.wp_product_id")
 
     class Meta:
         model = UserProductPermission

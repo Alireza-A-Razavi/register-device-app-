@@ -38,16 +38,16 @@ class VerifyDeviceTokenSerializer(serializers.Serializer):
             return False
 
 class LineModelSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField()
+    product_id = serializers.IntegerField(source="item.wp_product_id")
 
     class Meta:
         model = ProductLine
         fields = ("product_id", "quantity",)
 
     def create(self, validated_data):
-        product_wp_id = validated_data.pop("product_id")
+        product_wp_id = validated_data.pop("item")
         line, created = ProductLine.objects.get_or_create(
-            item=Product.objects.get(wp_product_id=product_wp_id),
+            item=Product.objects.get(wp_product_id=product_wp_id["wp_product_id"]),
             quantity=validated_data["quantity"],
         )
         return line

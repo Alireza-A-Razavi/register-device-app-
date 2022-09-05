@@ -140,6 +140,9 @@ class DeviceCreateOrVerify(generics.GenericAPIView):
                         message = "Successfully validated token."
                         status_code = status.HTTP_200_OK
                         d_token = None
+                    # take care of unactivate 
+                    plugins = device_token.activate_and_handle_plugins()
+                    print("did the plugin update \n")
                     data = {
                         "device-token": device_token.token,
                         "plugins": [plugin[0] for plugin in device_token.plugins.all().values_list("wp_product_id")],
