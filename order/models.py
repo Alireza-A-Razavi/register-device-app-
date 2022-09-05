@@ -72,7 +72,10 @@ class PaidOrder(models.Model):
     line_items = models.ManyToManyField(ProductLine)
 
     def __str__(self):
-        return f"{self.user.username} - order"
+        try:
+            return f"{self.user.username} - order"
+        except AttributeError:
+            return self.wp_order_id
 
     def save(self, *args, **kwargs):
         print("save method is called:  ", self.id)
