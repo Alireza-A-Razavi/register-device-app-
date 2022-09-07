@@ -41,6 +41,8 @@ class DeviceToken(models.Model):
         files_list = []
         if self.plugins.all().exists():
             products = [ prod for prod in self.plugins.all()]
+        else:
+            products = []
         if self.product:
             products.append(self.product)
         if products != []:
