@@ -45,7 +45,7 @@ class DeviceToken(models.Model):
             for file_model in product.files.all():
                 files_list.append(file_model.associated_file.name)
         self.file_paths = ", ".join(files_list)
-        super(User, self).save(*args, **kwargs)
+        super(DeviceToken, self).save(*args, **kwargs)
                         
     
     def refresh_token(self):
