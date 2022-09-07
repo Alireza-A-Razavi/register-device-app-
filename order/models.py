@@ -24,9 +24,29 @@ class DeviceToken(models.Model):
     product = models.ForeignKey("products.Product", blank=True, null=True, on_delete=models.SET_NULL)
     device_uuid = models.CharField(max_length=64, null=True, blank=True)
     expired = models.BooleanField(default=False, null=True, blank=True) # user expires it
+    file_paths = models.CharField(max_length=4096, default="", blank=True)
    
     def __str__(self):
         return str(self.token)
+
+    @property
+    def is_valid(self):
+        if not self.product:
+            return False
+        else:
+            return True
+
+    
+    def save(self, *args, **kwargs):
+        files_list = []
+        products = [ prod for prod in self.plugins.all()]
+        products.append(self.product)
+        for product in products:
+            for file_model in product.files.all():
+                files_list.append(file_model.associated_file.name)
+        self.file_paths = ", ".join(files_list)
+        super(User, self).save(*args, **kwargs)
+                        
     
     def refresh_token(self):
         self.refresh_time = timezone_now()
