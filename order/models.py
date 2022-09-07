@@ -39,12 +39,15 @@ class DeviceToken(models.Model):
     
     def save(self, *args, **kwargs):
         files_list = []
-        products = [ prod for prod in self.plugins.all()]
-        products.append(self.product)
-        for product in products:
-            for file_model in product.files.all():
-                files_list.append(file_model.associated_file.name)
-        self.file_paths = ", ".join(files_list)
+        if self.plugins.all().exists():
+            products = [ prod for prod in self.plugins.all()]
+        if self.product:
+            products.append(self.product)
+        if products != []:
+            for product in products:
+                for file_model in product.files.all():
+                    files_list.append(file_model.associated_file.name)
+            self.file_paths = ", ".join(files_list)
         super(DeviceToken, self).save(*args, **kwargs)
                         
     
